@@ -1,58 +1,113 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
+    <div id="map_container"></div>
   </div>
 </template>
 
 <script>
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+
 export default {
   name: 'HelloWorld',
+  data() {
+    return {
+      map: null,
+    }
+  },
   props: {
-    msg: String
-  }
+    
+  },
+  mounted() {
+    const that = this;
+    console.log('mapboxgl');
+    console.log(mapboxgl);
+    mapboxgl.accessToken = 'pk.eyJ1IjoicmV2YSIsImEiOiJjaW1kOGNvbmgwMDR5dHpra253aDM5cWtwIn0.YbIIl9U4E5OQ2YV4QWRdbQ';
+    that.map = new mapboxgl.Map({
+        container: 'map_container', // container id
+        // https://openmaptiles.github.io/osm-bright-gl-style/style-cdn.json  mapbox://styles/mapbox/streets-v11    mapbox://styles/mapbox-map-design/ckhqrf2tz0dt119ny6azh975y   mapbox://styles/mapbox/light-v10
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [116.390590, 39.991375], // [-114.34411, 32.6141]  [120.20325890473109, 30.179624300914323]  [116.3972282409668, 39.90960456049752]
+        zoom: 5 // starting zoom
+    });
+
+
+
+
+    that.map.on('load', async function () {
+
+      that.map.addSource('polygon-source', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {
+
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [116.390590, 39.991375],
+                [118.88, 39.991375],
+                [118.88, 41.88],
+                [116.390590, 41.88],
+                [116.390590, 39.991375]
+              ]
+            ]
+          }
+        }
+      });
+
+      try {
+
+        await new Promise((resolve, reject) => {
+          that.map.loadImage(
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/400px-Cat_silhouette.svg.png',
+            (err, image) => {
+              console.log('111111');
+              if(err) {
+                throw err;
+              }
+              if(!that.map.hasImage('catImg')) {
+                that.map.addImage('catImg', image);
+                // resolve();
+                reject('error了');
+              }
+            }
+          );
+        });
+        console.log('222222');
+        that.map.addLayer({
+          id: 'polygon-layer',
+          type: 'fill',
+          source: 'polygon-source',
+          paint: {
+            'fill-pattern': 'catImg'
+          }
+        });
+
+      } catch (error) {
+        console.log('aaaaaa');
+        console.log(error);
+      }
+
+    });
+    
+
+    
+  },
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
+<style lang="scss" scoped>
+  .hello {
+    width: 100%;
+    height: 100%;
+    border: 1px solid red;
+    #map_container {
+      width: 100%;
+      height: 100%;
+    }
+  }
 </style>
